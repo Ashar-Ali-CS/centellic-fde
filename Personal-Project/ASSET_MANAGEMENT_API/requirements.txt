@@ -1,0 +1,10 @@
+
+uvicorn
+
+FastAPI 
+
+httpx 
+
+chromadb
+
+voyageai
