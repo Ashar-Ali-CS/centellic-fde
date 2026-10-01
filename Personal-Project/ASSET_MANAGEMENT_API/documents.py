@@ -26,28 +26,28 @@ DOCUMENTS: list[dict[str, Any]] = [
         "id": "doc-001",
         "title": " ManGuard Class C Fund ",
         "fund_id":1,
-        "client_id":None,
+        "client_id": None,
         "type": "fund_factsheet",
         "body": (
-            "Fund_Name: ManGuard Class C Fund " 
-            "Fund_Strategy: "
-            "Fund_Fees:  1 percent annual , No Exit Fees "
-            "ESG: Sustainability only "
-            "Risk_Rating: Low"
+            "Fund_Name: ManGuard Class C Fund / " 
+            "Fund_Strategy: Unkown / "
+            "Fund_Fees:  1 percent annual , No Exit Fees / "
+            "ESG: Sustainability only / "
+            "Risk_Rating: Low / "
         ),
     },
     {
         "id": "doc-002",
         "title": "BlueRock - Class A Fund ",
         "fund_id":2,
-        "client_id":None,
+        "client_id": None,
         "type": "fund_factsheet",
         "body": (
-            "Fund_Name: BlueRock Class A Fund " 
-            "Fund_Strategy: "
-            "Fund_Fees:  5 percent annual  , 1 percent Exit Fees "
-            "ESG: Sustainability, No Alchohol companies , No Tabacco companies "
-            "Risk_Rating:Low"
+            "Fund_Name: BlueRock Class A Fund, " 
+            "Fund_Strategy: Unknown,  "
+            "Fund_Fees:  5 percent annual , 1 percent Exit Fees, "
+            "ESG: Sustainability, No Alchohol companies , No Tabacco companies, "
+            "Risk_Rating:Low, "
         ),
     },
     {
@@ -55,18 +55,18 @@ DOCUMENTS: list[dict[str, Any]] = [
         "title": "FastSaver Pension Fund ",
         "type": "fund_factsheet",
         "fund_id":3,
-        "client_id":None,
+        "client_id": None,
         "body": (
-            "Fund_Name: FastSaver Pension Fund  " 
-            "Fund_Strategy:  unknown "
-            "Fund_Fees:  5 percent annual  , 1 percent Exit Fees "
-            "ESG: Sustainability, No Alchohol companies , No Tabacco companies "
-            "Risk_Rating:Low"
+            "Fund_Name: FastSaver Pension Fund ,  " 
+            "Fund_Strategy:  unknown,  "
+            "Fund_Fees:  5 percent annual  , 1 percent Exit Fees,  "
+            "ESG: Sustainability, No Alchohol companies , No Tabacco companies,  "
+            "Risk_Rating:Low, "
         ),
     },
     {
         "id": "doc-004",
-        "title": " Jenny BlueRock Manager - BlueRock is best option for sustainable investors. ",
+        "title": " Jenny, BlueRock Manager - BlueRock is best option for sustainable investors. ",
         "type": "manager_commentry",
         "fund_id": None,
         "client_id":None,
@@ -115,7 +115,7 @@ DOCUMENTS: list[dict[str, Any]] = [
     },
     {
         "id": "doc-008",
-        "title": "",
+        "title": " Linda's Portfolio :)   ",
         "type": "client_portfolio",
         "client_id":4, 
         "fund_id": None,
@@ -152,3 +152,4 @@ DOCUMENTS: list[dict[str, Any]] = [
     },
 
 ]
+

@@ -7,4 +7,6 @@ httpx
 
 chromadb
 
-voyageai
+voyageai 
+
+anthropic

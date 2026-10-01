@@ -3,6 +3,9 @@
 
 #embedding provider has not changed ...only where vectors stored 
 
+
+import os 
+
 import chromadb
 
 import voyageai
@@ -42,17 +45,30 @@ def build_index() -> int:
     texts = [doc["body"] for doc in DOCUMENTS]
     vectors, tokens = embed_texts(texts,input_type="document")
 
+    metadatas = [
+        {
+            "title": doc.get("title", ""),
+            "type": doc.get("type", ""),
+            "fund_id": doc["fund_id"] if doc.get("fund_id") is not None else -1,
+            "client_id": doc["client_id"] if doc.get("client_id") is not None else -1,
+        }
+        for doc in DOCUMENTS
+    ]
+
+
     #if it already exists,upsert overwrites it(add would throw error) or if it doesnt it will create.
     collection.upsert(
         ids =[doc["id"] for doc in DOCUMENTS],
         embeddings=vectors, 
         documents=texts,
-        metadatas=[{"title":doc["title"], "type": doc["type"]} for doc in DOCUMENTS]
+        metadatas=metadatas,
     )
 
+  
     return tokens 
 
-# our function
+
+#search function
 def search(question: str, top_k:int=3) -> list[dict]:
     """ Embed the question and let Chroma do the storing """
 
@@ -65,8 +81,19 @@ def search(question: str, top_k:int=3) -> list[dict]:
         {
             "id":doc_id,
             "title":metadata["title"],
-            "text": text,
-
+            "type": metadata["type"],
+            # Safe lookup with fallback conversion for -1 -> None
+            "fund_id": (
+                metadata.get("fund_id") 
+                if metadata.get("fund_id") is not None and metadata.get("fund_id") != -1 
+                else None
+            ),
+            "client_id": (
+                metadata.get("client_id") 
+                if metadata.get("client_id") is not None and metadata.get("client_id") != -1 
+                else None
+            ),
+            "Content": text,
             #Chroma will give us back distance ...lower is closer
             # does ( 1-distance) in order to flip from return distance, to simlairty 
             "score": 1- distance,
@@ -109,8 +136,6 @@ def embed_texts(texts: list[str] ,  input_type: str)-> tuple[list[list[float]]]:
 #upsert instead of add -> add falls on an id that already exists , upsert overwrites. 
 
 
-#refacotring steps tommarow ,rapid UI prototyping (spec driven AI ,interacting with chroma db),
-#context engineering theory
 
 
 

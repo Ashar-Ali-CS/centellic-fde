@@ -37,7 +37,7 @@ def get_fund_or_404(fund_id: int) -> dict:
 # curl http://127.0.0.1:8000/funds
 
 @router.get("")
-def list_fund_documents():
+def get_all_documents():
     return ( document for document in DOCUMENTS)
 
 

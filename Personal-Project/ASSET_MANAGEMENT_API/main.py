@@ -1,7 +1,8 @@
 
 from fastapi import FastAPI
 
-from routers import funds, portfolios
+from routers import funds, portfolios,knowledge,llm
+
 
 app = FastAPI( title ="Asset Management API ")
 
@@ -11,6 +12,10 @@ app = FastAPI( title ="Asset Management API ")
 app.include_router(funds.router)
 
 app.include_router(portfolios.router)
+
+app.include_router(knowledge.router)
+
+app.include_router(llm.router)
 
 
 # curl http://127.0.0.1:8000/health
