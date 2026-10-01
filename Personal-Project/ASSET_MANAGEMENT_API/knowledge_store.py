@@ -137,6 +137,3 @@ def embed_texts(texts: list[str] ,  input_type: str)-> tuple[list[list[float]]]:
 
 
 
-
-
-

@@ -12,11 +12,15 @@ from fastapi.responses import StreamingResponse
 
 
 import  llm 
-from llm import MODEL, SYSTEM_PROMPT, build_prompt,client
-
+from llm import MODEL, SYSTEM_PROMPT, build_prompt,build_portfolio_prompt , client
 router = APIRouter(prefix="/llm",tags=["llm"])
 
+RELEVENCE_FLOOR: 0.40
 
+
+
+
+#I HAD PROBLEM WITH IMPORTNING THESE HELPER FUNCTIONS FROM THE funds.py and portfolios.py (server didnt understand)
 
 #this is helper function to search for the firm 
 def get_fund_or_404(fund_id: int) -> dict:
@@ -24,10 +28,6 @@ def get_fund_or_404(fund_id: int) -> dict:
         if document["fund_id"] == fund_id:
             return document
     raise HTTPException(status_code=404, detail=f"No fund factsheet  with fund id {fund_id} found")
-
-
-
-
 
 #this is helper function to search for the client_id 
 def get_client_or_404(client_id: int) -> dict:
@@ -71,13 +71,31 @@ def summary(fund_factsheet =Depends(get_fund_or_404)) -> dict:
 # Endpoint 2 analysis of existing  client portfolio existing by client_id and reccomandaitions 
 
 
+@router.post("/analyse/{client_id}")
+def analyse(client_portfolio = Depends(get_client_or_404)) -> dict:
+    try:
+        return llm.portfolio_analysis(client_portfolio)
+    except APITimeoutError:
+        raise HTTPException(status_code=504, detail= "Analysis provider timed out")
+    except RateLimitError:
+        raise HTTPException(status_code=429, detail="Analysis provider rate limited")
+    except APIStatusError:
+        raise HTTPException(status_code=502, detail="Analysis provider unavailable")
+    
 
-
-
-
+    
 
 # MAIN FEATUERE ENDPOINT - Client portfolio input   - GROUNDED  Stream Summary  of which fund best 
 
 
+#KEY TAKEAWAY
+#notice where context goes...
+#rules in system 
+#data in user 
 
-
+#@router.post("/s")
+#def :
+    return StreamingResponse(
+        llm.stream_summary(fund),
+        media_type="text/plain",
+    )

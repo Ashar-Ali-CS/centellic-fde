@@ -48,8 +48,6 @@ def get_fact_sheet( fund_facts: dict = Depends(get_fund_or_404)):
     return fund_facts
     
 
-#Endpoint 3 -  LLM Stream summary 
-
 
 
 

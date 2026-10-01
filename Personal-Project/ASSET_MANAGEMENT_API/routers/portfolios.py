@@ -22,7 +22,6 @@ def get_client_or_404(client_id: int) -> dict:
 
 
 
-
 #Endpoint 2 - Get specific client_portfolio based on client id 
 
 # curl http://127.0.0.1:8000/portfolios/2
@@ -35,23 +34,22 @@ def get_client_portfolio( client_portfolio: dict = Depends(get_client_or_404)):
 
 
 
-
 #Endpoint for adding client portfolio plan, this is done by the manager. 
 #They may want to make note of what the client 
 
 #class NewPortfolio (BaseModel):
 #      next doc 
-#    title
+#    title = ""
+#    fund_id = 
+#    client_id
 #    body 
 
 
-
 #post document based on verfication class
-
-#@router.post(NewDocument)
-#def add_new_note():
+@router.post("NewPortfolio")
+def add_client_portfolio( ):
+    return ("IN PROGRESS")
     
-
 
 #Changing client portfolio notes
 #@router.put("/{client_id}")

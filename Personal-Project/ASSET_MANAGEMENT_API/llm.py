@@ -40,7 +40,6 @@ client = anthropic.Anthropic(
 SYSTEM_PROMPT = (
     "You are a helpfull asset portfolio manager assistent. "
     "Use British English "
-    "  ??? "
      
 )
 
@@ -80,29 +79,27 @@ def summarise_fund_factsheet(fund_factsheet:dict) -> dict:
 
 
 #this function is too build the prompt used to summarise fund fact sheets by fund id 
-def build_prompt( fund_factsheet:dict) -> str:
+def build_portfolio_prompt( client_portfolio:dict) -> str:
     return (
-        f"Analyse this investment fund factsheet for a portfolio manager in formal but fun way"
-        f"Name: {fund_factsheet["title"]} "
-        f"Body:{fund_factsheet["body"]} "
+        f"Create short analysis brief for a portfolio manager in formal way" 
+        f"Name: {client_portfolio["title"]} "
+        f"Body:{client_portfolio["body"]} "
     )
 
 
 
 class PortfolioAnalysis(BaseModel):
     """validation- The shape of analysis we  require back,it is not suggestion to model ,it is a contract""" 
-    #
+    # Overall assesment
+    OverallAssesesmnet: list[str] = Field(max_length=3)
     # strengths 
     strengths: list[str] = Field(max_length=3)
     # risks 
     risks: list[str] = Field(max_length=3)
-    # #headcount_effeciency 
-    
-
 
 
 def portfolio_analysis(client_portfolio: dict) -> dict:
-    """Structured output. The response is validated against the FirmAnalsyis... or it fails """
+    """Structured output. The response folows portfolioAnalysis frameowrk """
     response = client.messages.parse(
         model=MODEL,
         max_tokens=500,
@@ -126,9 +123,50 @@ def portfolio_analysis(client_portfolio: dict) -> dict:
 
 
 
-
-
 #-----------------------RETRIEVEL AUGEMENTED RESPONSES FOR NEW CLIENT PORTFOLIO QUERYS LLM -------------------------------------
+
+
+
+GROUNDED_SYSTEM_PROMPT = (
+    " You are a helpfull asset portfolio manager assistent. Answer using ONLY the context provided"
+    "Cite the document id in square brackets after each claim , like [doc-001]."
+    " If context does not contain answer , say exactly: "
+    "'The provided documents do not answer the question.'"
+    "Never use knowledge from outside the context. Use British English. No em dash charecters."
+)
+
+
+
+# used in router knowledge 
+def stream_grounded_answer( question:str , context: str):
+
+    """Answers strictly from retrived context....the G in RAG , streaming it in chunks"""
+    with client.messages.stream(
+        model=MODEL,
+        max_tokens=500,
+        system=GROUNDED_SYSTEM_PROMPT,
+        messages=[{
+            "role":"user",
+            "content":f"Content \n\n{context}\n\n Question: {question}",
+        }],
+    ) as stream:
+        for text in stream.text_stream:
+            yield text 
+
+        # Outputs metadata to server console after stream ends
+        # I had trouble getting it with streaming response.
+        final = stream.get_final_message()
+        print(f"[METADATA] Input: {final.usage.input_tokens} | Output: {final.usage.output_tokens} | Stop: {final.stop_reason}")
+
+
+
+
+
+
+
+
+
+
 
 
 
