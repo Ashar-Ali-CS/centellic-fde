@@ -66,7 +66,7 @@ def search(q: Question)->dict:
 #search + groiunded
 @router.post("/ask")
 def stream_grounded_answer(q: Question)->dict:  
-    """RETRIVES TOP 3 DOCUMENTS OF RELEVENCE FROM SEARCH , THE CALLS LLM TO ANSWER SEARCH WITH GROUNDED ANSWER"""
+    """RETRIVES TOP 3 DOCUMENTS OF RELEVENCE FROM SEARCH , THEN CALLS LLM TO ANSWER SEARCH WITH GROUNDED ANSWER"""
 
     # 1. Retrieve
     #same call as "/knowledge/search "
@@ -76,7 +76,6 @@ def stream_grounded_answer(q: Question)->dict:
         raise HTTPException(status_code=409, detail=str(e) ) 
 
 
-    
     # 2. Filter, and decide whether to make a call to the model at all
     # (compare against our RELEVENCE_FLOOR )
     usable = [hit for hit in hits if hit["score"] >= RELEVENCE_FLOOR ]

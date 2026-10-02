@@ -71,6 +71,22 @@ def summarise_fund_factsheet(fund_factsheet:dict) -> dict:
     }
 
 
+def stream_summary(fund_factsheet: dict):
+    with client.messages.stream(
+        model=MODEL,
+        max_tokens=400,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": build_prompt(fund_factsheet)}],
+    ) as stream:
+        for text in stream.text_stream:
+            yield text
+
+
+
+
+
+
+
 
 #-----------------------LLM analysis of client portfolios---------------------------------------------------------------------
 

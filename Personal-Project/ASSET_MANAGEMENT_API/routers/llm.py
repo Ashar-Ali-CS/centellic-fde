@@ -38,10 +38,6 @@ def get_client_or_404(client_id: int) -> dict:
 
 
 
-
-
-
-
 #test returns sting working(no llm call)
 @router.get("/test")
 def test():
@@ -49,7 +45,7 @@ def test():
 
 
 
-# Endpoint 1 -fun but formal summary  of fund_fact sheets by fund id or 404
+# Endpoint 1 -formal summary  of fund_fact sheets by fund id or 404
 
 
 # curl -X POST "http://127.0.0.1:8000/llm/summary/1" 
@@ -68,7 +64,24 @@ def summary(fund_factsheet =Depends(get_fund_or_404)) -> dict:
 
 
 
-# Endpoint 2 analysis of existing  client portfolio existing by client_id and reccomandaitions 
+
+# Endpoint 2 - variant of summary endpoint that streams the resposne
+@router.post("/stream_summary/{fund_id}")
+def get_stream_summary(fund_factsheet =Depends(get_fund_or_404)):
+    try:
+        return llm.stream_summary(fund_factsheet)
+    except APITimeoutError:
+        raise HTTPException(status_code=504, detail="Summary provider timed out")
+    except RateLimitError:
+        raise HTTPException(status_code=429, detail="Summary provider rate limited")
+    except APIStatusError:
+        raise HTTPException(status_code=502, detail="Summary provider unavailable")
+
+
+
+
+
+# Endpoint 3 - analysis of existing  client portfolio existing by client_id and reccomandaitions 
 
 
 @router.post("/analyse/{client_id}")
@@ -84,18 +97,3 @@ def analyse(client_portfolio = Depends(get_client_or_404)) -> dict:
     
 
     
-
-# MAIN FEATUERE ENDPOINT - Client portfolio input   - GROUNDED  Stream Summary  of which fund best 
-
-
-#KEY TAKEAWAY
-#notice where context goes...
-#rules in system 
-#data in user 
-
-#@router.post("/s")
-#def :
-    return StreamingResponse(
-        llm.stream_summary(fund),
-        media_type="text/plain",
-    )
