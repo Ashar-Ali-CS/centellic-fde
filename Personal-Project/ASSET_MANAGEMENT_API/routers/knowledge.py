@@ -34,7 +34,6 @@ class Question(BaseModel):
     top_k: int = Field(default=3, gt=0,le=8) 
 
 
-
 #use prefix knowledge in curl to run - 
 #it is POST becuase POST creates something but at higher level POST does something (not like get) - like action
 
