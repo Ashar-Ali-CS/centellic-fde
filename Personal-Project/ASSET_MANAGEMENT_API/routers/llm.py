@@ -20,7 +20,8 @@ RELEVENCE_FLOOR: 0.40
 
 
 
-#I HAD PROBLEM WITH IMPORTNING THESE HELPER FUNCTIONS FROM THE funds.py and portfolios.py (server didnt understand)
+#I HAD PROBLEM WITH IMPORTING THESE HELPER FUNCTIONS FROM THE funds.py and portfolios.py (server didnt understand)
+#So i just put them here 
 
 #this is helper function to search for the firm 
 def get_fund_or_404(fund_id: int) -> dict:
@@ -76,8 +77,6 @@ def get_stream_summary(fund_factsheet =Depends(get_fund_or_404)):
         raise HTTPException(status_code=429, detail="Summary provider rate limited")
     except APIStatusError:
         raise HTTPException(status_code=502, detail="Summary provider unavailable")
-
-
 
 
 

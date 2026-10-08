@@ -108,7 +108,7 @@ def edit_portfolio(new:NewPortfolio,client_portfolio: dict = Depends(get_client_
 
 
 
-# ENDPOINT 4 - DELETE s
+# ENDPOINT 4 - DELETE 
 @router.delete("/{client_id}", status_code=204)
 def delete_portfolio(client_portfolio: dict = Depends(get_client_or_404)):
     """REMOVES CLIENT PORTFOLIO BY CLIENT ID"""

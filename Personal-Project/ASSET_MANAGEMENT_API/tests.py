@@ -25,6 +25,9 @@ FAKE_SUMMARY = {
     "input_tokens": 120, "output_tokens": 95, "stop_reason": "end_turn"
     }
 
+
+
+
 # TESTS FOR LLM 
 
 
@@ -36,3 +39,10 @@ def test_summary_returns_text_and_summary(monkeypatch):
     #assert what it should do 
     assert response.status_code ==200
     assert response.json()["input_tokens"] == 120
+
+
+
+
+
+# TEST FOR AGENT LOOP 
+
