@@ -35,7 +35,7 @@ client = anthropic.Anthropic(
 
 
 
-#-----------------------LLM summmary for summary of fund facts---------------------------------------------------------------------
+#-----------------------LLM summmary for summary of fund fact sheets---------------------------------------------------------------------
 
 SYSTEM_PROMPT = (
     "You are a helpfull asset portfolio manager assistent. "
@@ -71,6 +71,8 @@ def summarise_fund_factsheet(fund_factsheet:dict) -> dict:
     }
 
 
+
+#varient to stream summary
 def stream_summary(fund_factsheet: dict):
     with client.messages.stream(
         model=MODEL,
@@ -153,9 +155,9 @@ GROUNDED_SYSTEM_PROMPT = (
 
 
 
-# used in router knowledge 
-def stream_grounded_answer( question:str , context: str):
+# used in router knowledge.py 
 
+def stream_grounded_answer( question:str , context: str):
     """Answers strictly from retrived context....the G in RAG , streaming it in chunks"""
     with client.messages.stream(
         model=MODEL,
