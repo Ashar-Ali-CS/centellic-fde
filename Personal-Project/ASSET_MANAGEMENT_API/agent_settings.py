@@ -51,7 +51,7 @@ SEARCH_TOOL = {
 # TOOL 2 - ???
 
 TOOL = {
-    "name": "search_knowledge_base",
+    "name": "???",
     "description": (
         "Search the asset management knowledge base for documents relevent "
         "to a question about fund facts ,client portfolios, maneger commentry."
@@ -168,7 +168,7 @@ def _execute_tool(name:str, tool_input:dict) -> tuple[str,bool]:
 
     # The real success path - geniune results , formatted for the model to read. 
     formatted = "\n\n".join(
-            f"[{r['id']}] {r['title']} (score {r['score']:.2f})\n{r['text']}"
+            f"[{r['id']}] {r['title']} (score {r['score']:.2f})\n{r['Content']}"
             for r in results
     )
     return formatted, False

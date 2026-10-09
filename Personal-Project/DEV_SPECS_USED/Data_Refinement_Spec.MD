@@ -190,8 +190,6 @@ Rules
 
 
 
-
-
- ( I used GPT-5.6 Luna  for this , in some parts i changed the "%" to percent as it was red) 
+ (NOTE -  I prompted GPT-5.6 Luna with this spec, it made it more realistic fees and other things like risk rating - in some parts i changed the "%" to percent as it was red) 
 
 
