@@ -15,7 +15,7 @@ router = APIRouter(prefix = "/agent", tags=["agent"])
 
 @router.post("/ask")
 def ask(question:str):
-    """ask agent question"""
+    """ask agent question - it uses search with knowledge base or predict portfolio returns tool."""
     try:
         result = agent.ask_with_tools(question)
         return result 
@@ -25,4 +25,5 @@ def ask(question:str):
         raise HTTPException(status_code=429, detail="AI Agent rate limited")
     except APIStatusError:
         raise HTTPException(status_code=502, detail="AI Agent  unavailable")
+
 

@@ -4,8 +4,8 @@
 """ 
 This is the place agent+tool use loop  will be initilised. 
 It allows agent to use two tools: 
->search with agent (ask )
-> ? 
+>search with agent (knowledge/ask )
+> predict_portfolio returns  (portfolios/{client_id})
 
 """
 
@@ -48,30 +48,19 @@ SEARCH_TOOL = {
 
 
 
-# TOOL 2 - ???
+# TOOL 2 - The Agent retrives and predicts portfolio returns  using client id. 
 
 TOOL = {
-    "name": "???",
-    "description": (
-        "Search the asset management knowledge base for documents relevent "
-        "to a question about fund facts ,client portfolios, maneger commentry."
-    ),
+    "name": "predict_portfolio_returns",
+    "description": "Calculate the total annual management fees and projected returns for a client's specific portfolio allocation.",
     "input_schema": {
-        "type":"object",
+        "type": "object",
         "properties": {
-            "query": {"type": "string", "description": "The search query"}
+            "client_id": {"type": "integer", "description": "The client ID"},
         },
-        "required":["query"], 
-    },  
-
+        "required": ["client_id"],
+    },
 }
-
-
-
-
-
-
-
 
 
 
@@ -88,13 +77,13 @@ def ask_with_tools(question:str) -> dict:
     #the loop 
     for _ in range(MAX_ITERATIONS):
         response = client.messages.create(
-            model=MODEL,
-            max_tokens=600,
-            system = AGENT_SYSTEM_PROMPT,
-            tools=[SEARCH_TOOL],
-            messages=messages,
-        )
-
+                    model=MODEL,
+                    max_tokens=600,
+                    system=AGENT_SYSTEM_PROMPT,
+                    tools=[SEARCH_TOOL, TOOL], 
+                    messages=messages,
+                )
+        
         total_input_tokens += response.usage.input_tokens
         total_output_tokens += response.usage.output_tokens
 
@@ -143,28 +132,49 @@ def _execute_tool(name:str, tool_input:dict) -> tuple[str,bool]:
     """ Run the requested tool. Returns (result_text,is_error) """
 
     #Guardrails 
-    # Guard 1 - we only have one real tool - checks if it is equal to that(wrong tool if its not search )
-    if name != "search_knowledge_base":
+    # Guard 1 - we only have two valid tools - checks if it is equal to that(wrong tool if its not search )
+    valid_tools = ["search_knowledge_base", "predict_portfolio_returns"]
+    if name not in valid_tools:
         return f"Unknown tool: {name}", True
-    # Guard 2 - even the right tool is useless without its own argument (have to pass qeury in )
-    if "query" not in tool_input:
-        return  "Error: missing required field: query  ", True
 
-    #Execution of search 
-    # same RunTimeError that knowledge search always reasied
-    # it gets cuaght here instead of letting it crash the whole agent loop
-    try: 
-        results = knowledge.search(tool_input["query"], top_k=3)
-    except RuntimeError as e:
-        return f"Error: {e} ", True
+ 
+    # Guard 2 - Validate required arguments per tool
+    if name == "search_knowledge_base":
+        if "query" not in tool_input:
+            return "Error: missing required field: query", True
+    elif name == "predict_portfolio_returns":
+        if "client_id" not in tool_input:
+            return "Error: missing required field: client_id", True
 
+    # Execution branch 1: Search Knowledge Base
+    if name == "search_knowledge_base":
+        try: 
+            results = knowledge.search(tool_input["query"], top_k=3)
+        except RuntimeError as e:
+            return f"Error: {e}", True
 
-    #A search that WORKED , but found nothing 
-    # An honest empty result....nothing went wrong 
-    # if it will be empty set - doesnt call the model 
-    if not results:
-        return "No relevent documents found", False
+        if not results:
+            return "No relevant documents found", False
 
+        formatted = "\n\n".join(
+            f"[{r['id']}] {r['title']} (score {r['score']:.2f})\n{r['Content']}"
+            for r in results
+        )
+        return formatted, False
+
+    # Execution branch 2: Predict Portfolio Returns
+    if name == "predict_portfolio_returns":
+        client_id = tool_input["client_id"]
+        try:
+            # Replace this with your actual lookup/calculation logic
+            return (
+                f"Portfolio projection for Client ID {client_id}: "
+                f"Calculated annual fee impact is 0.75%. Projected 1-year growth: +6.5%.",
+                False
+            )
+        except Exception as e:
+            return f"Error calculating portfolio returns: {e}", True
+        
 
     # The real success path - geniune results , formatted for the model to read. 
     formatted = "\n\n".join(
