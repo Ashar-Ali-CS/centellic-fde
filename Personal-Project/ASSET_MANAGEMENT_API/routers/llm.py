@@ -65,19 +65,20 @@ def summary(fund_factsheet =Depends(get_fund_or_404)) -> dict:
 
 
 
-
-# Endpoint 2 - variant of summary endpoint that streams the resposne
+# Endpoint 2 - variant of summary endpoint that streams the response
 @router.post("/stream_summary/{fund_id}")
-def get_stream_summary(fund_factsheet =Depends(get_fund_or_404)):
+def get_stream_summary(fund_factsheet = Depends(get_fund_or_404)):
     try:
-        return llm.stream_summary(fund_factsheet)
+        return StreamingResponse(
+            llm.stream_summary(fund_factsheet),
+            media_type="text/plain"
+        )
     except APITimeoutError:
         raise HTTPException(status_code=504, detail="Summary provider timed out")
     except RateLimitError:
         raise HTTPException(status_code=429, detail="Summary provider rate limited")
     except APIStatusError:
         raise HTTPException(status_code=502, detail="Summary provider unavailable")
-
 
 
 # Endpoint 3 - analysis of existing  client portfolio existing by client_id and reccomandaitions 
