@@ -26,8 +26,6 @@ RELEVENCE_FLOOR = 0.4
 
 
 
-
-
 # class (QUESTION) using base model with 2 field (question and top_k)
 class Question(BaseModel):
     question: str = Field(min_length=3)
@@ -95,6 +93,10 @@ def stream_grounded_answer(q: Question)->dict:
         llm.stream_grounded_answer(q.question, context),
         media_type="text/plain",
     )
+
+
+
+
 
 
 
