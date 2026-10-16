@@ -8,8 +8,12 @@ This is how to run the streamlit front end
 
 git clone it 
 
+IMPORTANT -    In seperate git bash remember to have the ASSET_MANGEMENT_API server running 
+ $ uvicorn main:app --reload
 
-1. CD to ASSET_MANAGEMENT_API folder  in git bash
+
+
+1. CD to ASSET_MANAGEMENT_UI folder  in git bash
 
 
 2. Create virtual enviroment in git bash 
@@ -21,11 +25,16 @@ git clone it
 
  $ source venv/Scripts/activate
 
+ or 
+ 
+ $ venv/Scripts/activate
+
 4. Install requirements.text  in git bash 
 
  $ pip install -r requirements.txt
 
 
-5. Run server with 
 
- $ uvicorn main:app --reload
+5. Run streamlit app with
+
+$ streamlit run app.py        
