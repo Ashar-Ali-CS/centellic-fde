@@ -135,6 +135,7 @@ def ask_with_tools(question:str) -> dict:
 
 
 
+
 def _execute_tool(name:str, tool_input:dict) -> tuple[str,bool]:
     """ Run the requested tool. Returns (result_text,is_error) """
 
@@ -142,7 +143,7 @@ def _execute_tool(name:str, tool_input:dict) -> tuple[str,bool]:
     # Guard 1 - we only have two valid tools - checks if it is equal to that(wrong tool if its not search )
     valid_tools = ["search_knowledge_base", "predict_portfolio_returns"]
     if name not in valid_tools:
-        return f"Unknown tool: {name}", True
+        return f"Unknown tool: {name}", True 
 
  
     # Guard 2 - Validate required arguments per tool

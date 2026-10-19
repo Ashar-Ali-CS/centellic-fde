@@ -13,7 +13,7 @@ st.title("ASSET MANAGEMENT WEBAPP ")
 
 
 #This makes it horzizontally allignee
-tab1, tab2,tab3= st.tabs(["1 - SEARCH DOCS", "2 - ASK AGENT" , "3 -  FUNDS SUMMARY "] )
+tab1, tab2,tab3,tab4= st.tabs(["1 - SEARCH DOCS", "2 - ASK AGENT" , "3 -  FUNDS SUMMARY ", "VIEW CLIENT PORTFOLIOS"] )
 
 API_URL  = "http://127.0.0.1:8000"
 
@@ -129,4 +129,41 @@ with tab3:
             # Prevent silent crashing
             st.error(f"An unexpected error occurred: {str(e)}")
 
+
+
+# EXTRA FEATURES - VIEW ALL CLIENT PORTFOLIOS 
+
+
+
+
+#Endpoint 0 - Get all client portfolios to see. 
+
+#@router.get("")
+#def get_all_portfolios():
+#    return ( document for document in DOCUMENTS if document["type"]== "client_portfolio")
+
+
+#URL/portfolios
+
+with tab4: 
+    Query = st.text_area("EXTRA FEATURE - VIEW ALL CLIENT PORTFOLIOS )  ")
+    Top_K = 3
+
+    if st.button("Click me to search"):
+
+        try:
+            #Knowledge/search 
+            payload = {"question": Query, "top_k": Top_K}
+            response = requests.post(f"{API_URL}/knowledge/search", json=payload, timeout=60)
+            if response.status_code !=200:
+                st.write(f"ERROR HAS OCCURED ON API END - HERE IS STATUS CODE:  {response.status_code}  ")
+            data =  response.json()
+            st.write(f"Connection successfull heres the  info: {data}")
+        except requests.exceptions.Timeout:
+            st.error("The request timed out. API took too long to respond.")
+        except requests.exceptions.ConnectionError:
+            st.error("Could not connect to the API server. Make sure Uvicorn is running at http://127.0.0.1:8000.")
+        except Exception as e:
+            # Prevent silent crashing
+            st.error(f"An unexpected error occurred: {str(e)}")
 

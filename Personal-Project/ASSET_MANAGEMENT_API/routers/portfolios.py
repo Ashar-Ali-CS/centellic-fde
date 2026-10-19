@@ -29,10 +29,18 @@ _seen_keys: dict[str, dict] = {}
 
 
 
+#Endpoint 0 - Get all client portfolios to see. 
+
+@router.get("")
+def get_all_portfolios():
+    return ( document for document in DOCUMENTS if document["type"]== "client_portfolio")
+
+
 
 #Endpoint 1 - Get specific client_portfolio based on client id 
 
 # curl http://127.0.0.1:8000/portfolios/2
+
 
 
 @router.get("/{client_id}")
