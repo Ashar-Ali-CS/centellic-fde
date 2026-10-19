@@ -6,6 +6,8 @@ from fastapi import APIRouter,HTTPException, Header, Depends
 from documents import DOCUMENTS 
 from pydantic import BaseModel ,Field
 
+import knowledge_store as knowledge
+
 
 router = APIRouter(prefix="/portfolios",tags=["portfolios"])
 
@@ -33,11 +35,18 @@ _seen_keys: dict[str, dict] = {}
 
 @router.get("")
 def get_all_portfolios():
-    return ( document["body"] for document in DOCUMENTS if document["type"]== "client_portfolio")
+    """Fetch all client portfolios, returning only their client_id and body."""
+    return [
+        {
+            "client_id": document.get("client_id"),
+            "body": document.get("body"),
+        } 
+        for document in DOCUMENTS 
+        if document.get("type") == "client_portfolio"
+    ]
 
 
-
-#Endpoint 1 - Get specific client_portfolio based on client id 
+#Endpoint 1 - Get specific client_portfolio based on client id
 
 # curl http://127.0.0.1:8000/portfolios/2
 
@@ -84,6 +93,8 @@ def add_client_portfolio(new:NewPortfolio, idempotency_key:str | None = Header(d
 
 
 
+
+
     client_portfolio = {
         "id": new_doc_id,
         "title": new.title,
@@ -93,6 +104,7 @@ def add_client_portfolio(new:NewPortfolio, idempotency_key:str | None = Header(d
         "body": new.body,
     }
     DOCUMENTS.append(client_portfolio)
+    knowledge.build_index()
 
     if idempotency_key is not None:
         _seen_keys[idempotency_key]=client_portfolio
@@ -121,6 +133,7 @@ def edit_portfolio(new:NewPortfolio,client_portfolio: dict = Depends(get_client_
 def delete_portfolio(client_portfolio: dict = Depends(get_client_or_404)):
     """REMOVES CLIENT PORTFOLIO BY CLIENT ID"""
     DOCUMENTS.remove(client_portfolio)
+    knowledge.build_index()
     return
 
 

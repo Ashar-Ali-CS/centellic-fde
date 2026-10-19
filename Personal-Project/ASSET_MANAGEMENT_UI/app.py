@@ -4,6 +4,7 @@
 import streamlit as st
 import requests
 
+import uuid   #This is unique identifier to stop duplicate form submissisions 
 
 
 st.set_page_config(page_title="ASSET MANAGE WEBAPP   ", page_icon=":)", layout="centered")
@@ -13,7 +14,7 @@ st.title("ASSET MANAGEMENT WEBAPP ")
 
 
 #This makes it horzizontally allignee
-tab1, tab2,tab3,tab4= st.tabs(["1 - SEARCH DOCS", "2 - ASK AGENT" , "3 -  FUNDS SUMMARY ", "VIEW CLIENT PORTFOLIOS"] )
+tab1, tab2,tab3,tab4= st.tabs([ "MANAGER PORTAL", "1 - SEARCH DOCS", "2 - ASK AGENT" , "3 -  FUNDS SUMMARY "] )
 
 API_URL  = "http://127.0.0.1:8000"
 
@@ -24,7 +25,7 @@ API_URL  = "http://127.0.0.1:8000"
 #Handle the case where the index has not been built yet, this returns a specific status code, not a generic failure
 #Handle a normal failure differently from the “index not built” case
 
-with tab1: 
+with tab2: 
     Query = st.text_area("FEATURE 1-  SEMANTIC SEARCH (knowledge/search )  ")
     Top_K = 3
 
@@ -59,7 +60,7 @@ with tab1:
 #Show the number of tool calls made and the token counts somewhere on screen
 #Show a clear error message if the request fails, do not let it crash silently
 
-with tab2: 
+with tab3: 
     Question = st.text_area("FEATURE 2 - ASK AGENT HERE ( it will need client_Id if using  predict portfolio returns tool) ")
 
     if st.button("Click me to ask agent something"):
@@ -97,7 +98,7 @@ with tab2:
 
 #reverse engnieered from firm intel UI
 
-with tab3: 
+with tab4: 
     fund_id = st.text_area("FEATURE 3 - STREAM LLM SUMMARY- WRITE FUND IDNUMBER TO SUMMMARISE FACTSHEET ")
 
     if st.button("Click me to stream an LLM summary of Fund Factsheets"):
@@ -134,22 +135,10 @@ with tab3:
 # EXTRA FEATURES - VIEW ALL CLIENT PORTFOLIOS 
 
 
+with tab1: 
+    st.subheader("Portfolio Manager Portal- View All,Add and Delete by id ")
 
-
-#Endpoint 0 - Get all client portfolios to see. 
-
-#@router.get("")
-#def get_all_portfolios():
-#    return ( document for document in DOCUMENTS if document["type"]== "client_portfolio")
-
-
-#URL/portfolios
-
-
-with tab4: 
-    st.subheader("Extra Feature: View All Client Portfolios")
-
-    if st.button("VIEW ALL PORTFOLIOS"):
+    if st.button("SEE CLIENT PORTFOLIOS"):
         try:
             # GET requests don't need a json payload for this
             response = requests.get(f"{API_URL}/portfolios/", timeout=60)
@@ -164,6 +153,7 @@ with tab4:
                 # Loop through and display each portfolio inside a clean card container
                 for i, portfolio_text in enumerate(data):
                     with st.container(border=True):
+                    
                         st.markdown(f"### 💼 Portfolio Record #{i + 1}")
                         st.write(portfolio_text)
 
@@ -171,5 +161,63 @@ with tab4:
             st.error("The request timed out. API took too long to respond.")
         except requests.exceptions.ConnectionError:
             st.error("Could not connect to the API server. Make sure Uvicorn is running at http://127.0.0.1:8000.")
+        except Exception as e:
+            st.error(f"An unexpected error occurred: {str(e)}")
+
+
+
+    st.markdown("###  Add New Client Portfolio")
+    
+    with st.form("create_portfolio_form", clear_on_submit=True):
+        title = st.text_input("Portfolio Title", placeholder="e.g., Client Portfolio: Jane Turncoat")
+        
+        st.caption("USE THIS FORMAT COPY AND PASTE FOR RECORD CONSISTENCY : Client_Name: ... / Portfolio_Allocation: ... / Total_Assets: ... / Client_Mandate: ...")
+        body = st.text_area(
+            "Portfolio Details", 
+            placeholder="Client_Name: Jane Doe / Portfolio_Allocation: 50% FastSaver / Total_Assets: £200,000 / Client_Mandate: Growth",
+            height=100
+        )
+
+        submitted = st.form_submit_button("Submit New Portfolio")
+
+        if submitted:
+            if not title.strip() or not body.strip():
+                st.warning("Please fill in both fields.")
+            else:
+                try:
+                    payload = {"title": title.strip(), "body": body.strip()}
+                    headers = {"idempotency-key": str(uuid.uuid4())}
+                    
+                    res = requests.post(f"{API_URL}/portfolios/add", json=payload, headers=headers, timeout=30)
+                    
+                    if res.status_code in (200, 201):
+                        st.success("Portfolio added successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"Error: {res.text}")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred: {str(e)}")
+
+
+    # delete client portfolio by client id 
+        
+    st.markdown("###  Delete client portfolio by id ")
+    # 1. Input field for the manager to specify the ID
+    client_id_to_delete = st.number_input("Enter Client ID to Delete", min_value=1, step=1, value=1)
+    
+    if st.button("Delete Portfolio"):
+        try:
+            # 2. Use requests.delete instead of post, hitting your exact backend route
+            response = requests.delete(f"{API_URL}/portfolios/{client_id_to_delete}", timeout=60)
+            
+            # 3. Handle the 204 No Content success status (no json body is returned)
+            if response.status_code == 204:
+                st.success(f"Successfully deleted Client ID {client_id_to_delete}!")
+                st.rerun()  # Refresh the UI to reflect the deletion
+            elif response.status_code == 404:
+                st.error(f"Client ID {client_id_to_delete} was not found.")
+            else:
+                st.error(f"ERROR HAS OCCURRED ON API END - STATUS CODE: {response.status_code}")
+                
         except Exception as e:
             st.error(f"An unexpected error occurred: {str(e)}")
