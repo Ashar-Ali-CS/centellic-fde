@@ -11,10 +11,13 @@ from fastapi.testclient import TestClient
 
 
 import knowledge_store as knowledge
+import agent_settings as agent
 
 from main import app
 
+import httpx
 import llm
+
 
 
 client = TestClient(app)
@@ -22,7 +25,7 @@ client = TestClient(app)
 
 
 
-# FAKE SUMMARY OF CLIENT PORTFOLIO 1 
+# FAKE SUMMARY OF CLIENT PORTFOLIO 1  ( this isnt a client or real - its just something for fake LLM to test)
 
 FAKE_SUMMARY = {
     "id": 1, "name": "Harding & Voss", "summary": "A fixture company",
@@ -57,51 +60,26 @@ def test_summary_returns_text_and_summary(monkeypatch):
     assert response.json()["input_tokens"] == 120
 
 
+def test_provider_timeout_becomes_504(monkeypatch):
+    def boom(firm):
+        raise anthropic.APITimeoutError(request=None)
+    monkeypatch.setattr(llm, "summarise_fund_factsheet",boom)
+    response = client.post("/llm/summary/1")
+    assert response.status_code == 504
 
 
 
 
 
-
-
-#NOT IMPLEMENTED YET : 
 
 # ----------- TESTS FOR VECTOR SEARCH EMBEDDINGS (no real embedding calls) --------------
 
-#def test_search_returns_ranked_hits(monkeypatch):
-#    monkeypatch.setattr(knowledge, "search", lambda q, k=3: [STRONG_HIT])
-
-#    response = client.post("/knowledge/search", json={"question": "how is PEP worked out"})
-#    assert response.status_code == 200
-#    assert response.json()["results"][0]["id"] == "doc-008"
 
 
-# TESTING INDEX BUILT BEFORE
-#def test_search_before_indexing_is_409(monkeypatch):
- #   def not_built(q, k=3):
- #       return 409
-
- #   monkeypatch.setattr(knowledge, "search", not_built)
-
- #   response = client.post("/knowledge/search", json={"question": "anything at all"})
-#    assert response.status_code == 409
 
 
 
 #TESTING REFUSAL RULE 
-
-#def test_ask_refuses_without_calling_the_model(monkeypatch):
-#    monkeypatch.setattr(knowledge, "search", lambda q, k=3: [WEAK_HIT])
-
-  #  def must_not_be_called(q, c):
-  #      raise AssertionError("The model was called despite no relevant context")
-
-   # monkeypatch.setattr(llm, "answer_from_context", must_not_be_called)
-
-    #body = client.post("/knowledge/ask", json={"question": "what is the capital of France"}).json()
-    #assert body["refused"] is True
-    #assert body["answer"] is None
-    #assert body["sources"] == []
 
 
 def test_short_question_is_rejected_before_any_work():
@@ -110,13 +88,55 @@ def test_short_question_is_rejected_before_any_work():
 
 
 
-
-
 # ----------- TESTS FOR AGENT AND MAX ITERATIONS --------------
 
 
+#Helpers 
+class FakeToolUseBlock: 
+    def __init__(self, input_):
+        self.type = "tool_use"
+        self.id = "toolu_01"
+        self.name = "search_knowledge_base"
+        self.input = input_
+class FakeUsage: 
+    def __init__(self, i , o ):
+        self.input_tokens, self.output_tokens = i,o
+class FakeResponse:
+    def __init__(self,content,stop_reason, usage):
+        self.content, self.stop_reason, self.usage = content, stop_reason, usage
 
 
-#need to do this
+
+#TESTING MAX ITERATIONS
+
+#**kwargs - accepts anything (no matter how many arguements)
+# a test arguement 
+def test_agent_stops_at_max_iterations_instead_of_looping_forever(monkeypatch):
+    def fake_create(**kwargs):
+        return FakeResponse (
+            [FakeToolUseBlock({"query": "anything"})],"tool_use", FakeUsage(100,15)
+    )
+
+    monkeypatch.setattr(agent.client.messages, "create",fake_create)
+    monkeypatch.setattr(
+        agent.knowledge, "search",
+        lambda q ,top_k=3: [{"id":"doc-001","title": "title","text":"x","score":0.5}]
+    )
+
+    response = client.post("/agent/ask", params={"question": "never resolves"})
+    body = response.json()
+
+    #assert = completed 
+
+    assert response.status_code ==200  
+
+    #assert - stop reoson
+
+    assert body["stop_reason"] == "max_iterations"
+
+    #assert- tool_calls made
+
+    assert body["tool_calls_made"] == agent.MAX_ITERATIONS
+
 
 

@@ -124,7 +124,14 @@ def ask_with_tools(question:str) -> dict:
         #expect in tool use(model side) +tool result (query side)
         messages.append({"role":"user", "content": tool_results})
 
-    
+    return {
+        "answer": "Reached maximum iterations without a final response.",
+        "completed": False,
+        "tool_calls_made": tool_calls_made,
+        "input_tokens": total_input_tokens,
+        "output_tokens": total_output_tokens,
+        "stop_reason": "max_iterations",
+    }
 
 
 
@@ -157,7 +164,7 @@ def _execute_tool(name:str, tool_input:dict) -> tuple[str,bool]:
             return "No relevant documents found", False
 
         formatted = "\n\n".join(
-            f"[{r['id']}] {r['title']} (score {r['score']:.2f})\n{r['Content']}"
+            f"[{r['id']}] {r['title']} (score {r['score']:.2f})\n{r.get('text', r.get('Content', ''))}"
             for r in results
         )
         return formatted, False
