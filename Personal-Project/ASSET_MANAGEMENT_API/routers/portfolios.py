@@ -33,7 +33,7 @@ _seen_keys: dict[str, dict] = {}
 
 @router.get("")
 def get_all_portfolios():
-    return ( document for document in DOCUMENTS if document["type"]== "client_portfolio")
+    return ( document["body"] for document in DOCUMENTS if document["type"]== "client_portfolio")
 
 
 

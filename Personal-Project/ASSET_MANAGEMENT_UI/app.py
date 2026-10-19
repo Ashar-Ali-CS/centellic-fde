@@ -145,25 +145,31 @@ with tab3:
 
 #URL/portfolios
 
+
 with tab4: 
-    Query = st.text_area("EXTRA FEATURE - VIEW ALL CLIENT PORTFOLIOS )  ")
-    Top_K = 3
+    st.subheader("Extra Feature: View All Client Portfolios")
 
-    if st.button("Click me to search"):
-
+    if st.button("VIEW ALL PORTFOLIOS"):
         try:
-            #Knowledge/search 
-            payload = {"question": Query, "top_k": Top_K}
-            response = requests.post(f"{API_URL}/knowledge/search", json=payload, timeout=60)
-            if response.status_code !=200:
-                st.write(f"ERROR HAS OCCURED ON API END - HERE IS STATUS CODE:  {response.status_code}  ")
-            data =  response.json()
-            st.write(f"Connection successfull heres the  info: {data}")
+            # GET requests don't need a json payload for this
+            response = requests.get(f"{API_URL}/portfolios/", timeout=60)
+            
+            if response.status_code != 200:
+                st.error(f"ERROR HAS OCCURRED ON API END - STATUS CODE: {response.status_code} - {response.text}")
+            else:
+                data = response.json()
+                st.success("Successfully fetched portfolios!")
+                ## Display the data nicely as a JSON tree or dataframe
+                #st.json(data)
+                # Loop through and display each portfolio inside a clean card container
+                for i, portfolio_text in enumerate(data):
+                    with st.container(border=True):
+                        st.markdown(f"### 💼 Portfolio Record #{i + 1}")
+                        st.write(portfolio_text)
+
         except requests.exceptions.Timeout:
             st.error("The request timed out. API took too long to respond.")
         except requests.exceptions.ConnectionError:
             st.error("Could not connect to the API server. Make sure Uvicorn is running at http://127.0.0.1:8000.")
         except Exception as e:
-            # Prevent silent crashing
             st.error(f"An unexpected error occurred: {str(e)}")
-
