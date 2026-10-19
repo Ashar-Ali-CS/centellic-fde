@@ -201,23 +201,23 @@ with tab1:
 
     # delete client portfolio by client id 
         
-    st.markdown("###  Delete client portfolio by id ")
-    # 1. Input field for the manager to specify the ID
-    client_id_to_delete = st.number_input("Enter Client ID to Delete", min_value=1, step=1, value=1)
+   # st.markdown("###  Delete client portfolio by id ")
+   # # 1. Input field for the manager to specify the ID
+   # client_id_to_delete = st.number_input("Enter Client ID to Delete", min_value=1, step=1, value=1)
     
-    if st.button("Delete Portfolio"):
-        try:
-            # 2. Use requests.delete instead of post, hitting your exact backend route
-            response = requests.delete(f"{API_URL}/portfolios/{client_id_to_delete}", timeout=60)
-            
-            # 3. Handle the 204 No Content success status (no json body is returned)
-            if response.status_code == 204:
-                st.success(f"Successfully deleted Client ID {client_id_to_delete}!")
-                st.rerun()  # Refresh the UI to reflect the deletion
-            elif response.status_code == 404:
-                st.error(f"Client ID {client_id_to_delete} was not found.")
-            else:
-                st.error(f"ERROR HAS OCCURRED ON API END - STATUS CODE: {response.status_code}")
-                
-        except Exception as e:
-            st.error(f"An unexpected error occurred: {str(e)}")
+   # if st.button("Delete Portfolio"):
+   #     try:
+   #         # 2. Use requests.delete instead of post, hitting your exact backend route
+   #         response = requests.delete(f"{API_URL}/portfolios/{client_id_to_delete}", timeout=60)
+   #         
+   #         # 3. Handle the 204 No Content success status (no json body is returned)
+   #         if response.status_code == 204:
+   #             st.success(f"Successfully deleted Client ID {client_id_to_delete}!")
+   #             st.rerun()  # Refresh the UI to reflect the deletion
+   #         elif response.status_code == 404:
+   #             st.error(f"Client ID {client_id_to_delete} was not found.")
+   #         else:
+   #             st.error(f"ERROR HAS OCCURRED ON API END - STATUS CODE: {response.status_code}")
+   #             
+   #     except Exception as e:
+   #         st.error(f"An unexpected error occurred: {str(e)}")

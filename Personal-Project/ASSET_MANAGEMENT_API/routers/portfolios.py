@@ -80,19 +80,25 @@ def add_client_portfolio(new:NewPortfolio, idempotency_key:str | None = Header(d
     if idempotency_key is not None and idempotency_key in _seen_keys:
         return _seen_keys[idempotency_key]
 
-    # Generate new doc ID cleanly
-    new_doc_id = f"doc-{len(DOCUMENTS) + 1:03d}"
 
+    # Bulletproof unique ID generation
+    existing_ids = {doc.get("id") for doc in DOCUMENTS}
+    counter = len(DOCUMENTS) + 1
+    new_doc_id = f"doc-{counter:03d}"
+    while new_doc_id in existing_ids:
+        counter += 1
+        new_doc_id = f"doc-{counter:03d}"
+
+
+    # Generate new doc ID cleanly
+    #new_doc_id = f"doc-{len(DOCUMENTS) + 1:03d}"
     #  creates client_id for new portfolio
     #  by finding the current highest client_id
-    existing_client_ids = [
-        doc["client_id"] for doc in DOCUMENTS 
-        if doc.get("client_id") is not None
-    ]
-    next_client_id = max(existing_client_ids, default=0) + 1
-
-
-
+    #existing_client_ids = [
+    #    doc["client_id"] for doc in DOCUMENTS 
+    #    if doc.get("client_id") is not None
+    #]
+    #next_client_id = max(existing_client_ids, default=0) + 1
 
 
     client_portfolio = {
@@ -135,6 +141,9 @@ def delete_portfolio(client_portfolio: dict = Depends(get_client_or_404)):
     DOCUMENTS.remove(client_portfolio)
     knowledge.build_index()
     return
+
+
+
 
 
 
