@@ -52,7 +52,7 @@ SEARCH_TOOL = {
 
 TOOL = {
     "name": "predict_portfolio_returns",
-    "description": "Calculate the total annual management fees and projected returns for a client's specific portfolio allocation.",
+    "description": " Search thier client_name first and display then - Calculate the total annual management fees and projected returns for a client's specific portfolio allocation.",
     "input_schema": {
         "type": "object",
         "properties": {

@@ -65,30 +65,27 @@ with tab3:
 
     if st.button("Click me to ask agent something"):
         try:
+            # Notice stream=True is removed because we want standard JSON back
             response = requests.post(f"{API_URL}/agent/ask", params={"question": Question}, timeout=60)
             
             if response.status_code == 200:
-                try:
-                    data = response.json()
-                except Exception:
-                    st.error(f"Failed to parse JSON. Raw response from server: {response.text}")
-                    data = None
-
-                if data:
-                    st.markdown("### Agent Response")
-                    st.write(data.get("answer", "No answer provided."))
-                    
-                    if not data.get("completed", True):
-                        st.warning("Note: The agent reached its iteration limit before fully completing.")
-                    
-                    st.divider()
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Tool Calls", data.get("tool_calls_made", 0))
-                    col2.metric("Input Tokens", data.get("input_tokens", 0))
-                    col3.metric("Output Tokens", data.get("output_tokens", 0))
+                data = response.json()
+                
+                st.markdown("### Agent Response")
+                st.write(data.get("answer", "No answer provided."))
+                
+                if not data.get("completed", True):
+                    st.warning("Note: The agent reached its iteration limit before fully completing.")
+                
+                st.divider()
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Tool Calls", data.get("tool_calls_made", 0))
+                col2.metric("Input Tokens", data.get("input_tokens", 0))
+                col3.metric("Output Tokens", data.get("output_tokens", 0))
+                
             else:
                 st.error(f"ERROR OCCURRED ON API END - STATUS CODE: {response.status_code}")
-                st.write(response.text) # This will show you the actual FastAPI error message if it crashed
+                st.write(response.text)
                 
         except requests.exceptions.Timeout:
             st.error("The request timed out. API took too long to respond.")
@@ -96,7 +93,6 @@ with tab3:
             st.error("Could not connect to the API server. Make sure Uvicorn is running at http://127.0.0.1:8000.")
         except Exception as e:
             st.error(f"An unexpected error occurred: {str(e)}")
-
      #       data =  response.json()
      #       st.write(f"Connection successfull heres info: {data}")
      #   except requests.exceptions.Timeout:

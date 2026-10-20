@@ -9,19 +9,23 @@ from pydantic import BaseModel,Field
 
 from anthropic import APIStatusError, APITimeoutError, RateLimitError
 
-
+import context 
+import gate 
 import grounding 
 
 import knowledge_store as knowledge 
-
 
 import llm 
 
 import hybrid
 
+import settings 
+
+
+
 #our relevence floor
 #below this we treat retrived context as not actually relevent
-RELEVENCE_FLOOR = 0.40
+RELEVENCE_FLOOR = 0.45
 
 
 #create your router 
@@ -46,7 +50,10 @@ class Question(BaseModel):
 @router.post("/index")
 def rebuild_index():
     """Embed the corpus. Costs tokens....so it is a deliberate POST,rather than automatic"""
-    tokens =  knowledge.build_index()
+    try:
+        tokens = knowledge.build_index()
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     return {"indexed": knowledge.count(), "embedding_tokens": tokens}
 
 
@@ -91,7 +98,10 @@ def ask(q: Question):
     # 2. Filter, and decide whether to make a call to the model at all
     # (compare against our RELEVENCE_FLOOR )
     # REPLECED - usable = [hit for hit in hits if hit["score"] >= RELEVENCE_FLOOR ]
-    usable = [hit for hit in hits if hybrid.is_usable(hit, RELEVENCE_FLOOR)]
+
+    # Old version (before azure) - usable = [hit for hit in hits if hybrid.is_usable(hit, RELEVENCE_FLOOR)]
+
+    usable = [hit for hit in hits if gate.is_usable(hit, RELEVENCE_FLOOR, settings.RERANK_FLOOR)]
 
     if not usable:
         return {

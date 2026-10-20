@@ -3,7 +3,7 @@
 
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+
 
 from anthropic import APIStatusError, APITimeoutError, RateLimitError
 import agent_settings as agent
@@ -30,19 +30,11 @@ router = APIRouter(prefix = "/agent", tags=["agent"])
 # STREAMING VERSION IS CHOSEN 
 @router.post("/ask")
 def ask(question: str):
-    """Ask agent question - streams the response back chunk by chunk."""
+    """Ask agent question - returns a clean JSON dictionary."""
     try:
-        # Assuming your agent can yield text chunks or you have a streaming version of ask_with_tools
-        def generate():
-            # If your agent function supports yielding chunks:
-            for chunk in agent.ask_with_tools(question):
-                yield chunk
-                
-        return StreamingResponse(generate(), media_type="text/plain")
-        
-    except APITimeoutError:
-        raise HTTPException(status_code=504, detail="AI Agent timed out")
-    except RateLimitError:
-        raise HTTPException(status_code=429, detail="AI Agent rate limited")
-    except APIStatusError:
-        raise HTTPException(status_code=502, detail="AI Agent unavailable")
+        # This must return a dictionary containing keys like:
+        # answer, completed, tool_calls_made, input_tokens, output_tokens, stop_reason
+        result = agent.ask_with_tools(question)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

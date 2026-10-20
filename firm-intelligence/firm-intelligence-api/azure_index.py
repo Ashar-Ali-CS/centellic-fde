@@ -44,15 +44,16 @@ def key_for(chunk_id: str) -> str:
 
 
 
-def index_definitions(name:str) -> SearchIndex:
+# CHANGED Searchable field embeding to SearchFIeld
+def index_definition(name:str) -> SearchIndex:
     #pt 1 - defining columns 
     fields = [
         SimpleField(name="chunk_key", type=SearchFieldDataType.String, key=True),
         SimpleField(name="chunk_id", type=SearchFieldDataType.String, filterable=True),
         SimpleField(name="doc_id", type=SearchFieldDataType.String, filterable=True),
-        SearchableField(name="title",type=SearchFieldDataType.String),
+        SearchableField(name="title", type=SearchFieldDataType.String),
         SearchableField(name="text", type=SearchFieldDataType.String),
-        SearchableField(name="embedding",
+        SearchField(name="embedding",
                         type=SearchFieldDataType.Collection(SearchFieldDataType.Single), 
                         searchable=True, 
                         vector_search_dimensions=DIMENSIONS, 
@@ -63,7 +64,7 @@ def index_definitions(name:str) -> SearchIndex:
     #pt 2 - how to search the vectors   
     vector_search = VectorSearch(
         algorithms=[HnswAlgorithmConfiguration(name=ALGORITHM,parameters =HnswParameters(metric="cosine"))],
-        profiles=VectorSearchProfile(name=VECTOR_PROFILE, algorithim_configuration_name=ALGORITHM)
+        profiles=[VectorSearchProfile(name=VECTOR_PROFILE, algorithm_configuration_name=ALGORITHM)]
     )
 
 
@@ -71,8 +72,8 @@ def index_definitions(name:str) -> SearchIndex:
     semantic_search = SemanticSearch(configurations=[SemanticConfiguration(
         name=settings.SEMANTIC_CONFIG,
         prioritized_fields=SemanticPrioritizedFields(
-            title_fields=SemanticField(field_name="title"),
-            content_field = [SemanticField(field_name = "text")]
+            title_field=SemanticField(field_name="title"),
+            content_fields = [SemanticField(field_name = "text")]
         )
     )])
 

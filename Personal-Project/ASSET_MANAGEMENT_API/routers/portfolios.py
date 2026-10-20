@@ -8,6 +8,7 @@ from pydantic import BaseModel ,Field
 
 import knowledge_store as knowledge
 
+from knowledge_store import collection
 
 router = APIRouter(prefix="/portfolios",tags=["portfolios"])
 
@@ -33,17 +34,36 @@ _seen_keys: dict[str, dict] = {}
 
 #Endpoint 0 - Get all client portfolios to see. 
 
+#@router.get("")
+#def get_all_portfolios():
+#    """Fetch all client portfolios, returning only their client_id and body."""
+#    return [
+#        {
+#            "client_id": document.get("client_id"),
+#            "body": document.get("body"),
+#        } 
+#        for document in DOCUMENTS 
+#        if document.get("type") == "client_portfolio"
+#    ]
 @router.get("")
 def get_all_portfolios():
-    """Fetch all client portfolios, returning only their client_id and body."""
-    return [
-        {
-            "client_id": document.get("client_id"),
-            "body": document.get("body"),
-        } 
-        for document in DOCUMENTS 
-        if document.get("type") == "client_portfolio"
-    ]
+    """Fetch all client portfolios directly from local ChromaDB storage without calling the API."""
+    try:
+        # collection.get only reads local disk, so it will never hit Voyage AI rate limits
+        all_data = collection.get(include=["documents", "metadatas"])
+        
+        portfolios = []
+        for body, metadata in zip(all_data["documents"], all_data["metadatas"]):
+            if metadata.get("type") == "client_portfolio":
+                portfolios.append({
+                    "client_id": metadata.get("client_id"),
+                    "body": body,
+                })
+                
+        return portfolios
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch portfolios: {str(e)}")
+
 
 
 #Endpoint 1 - Get specific client_portfolio based on client id
