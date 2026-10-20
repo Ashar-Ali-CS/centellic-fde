@@ -61,28 +61,54 @@ with tab2:
 #Show a clear error message if the request fails, do not let it crash silently
 
 with tab3: 
-    Question = st.text_area("FEATURE 2 - ASK AGENT HERE ( it will need client_Id if using  predict portfolio returns tool) ")
+    Question = st.text_area("FEATURE 2 - ASK AGENT HERE (it will need client_id if using predict portfolio returns tool)")
 
     if st.button("Click me to ask agent something"):
-
         try:
-            # Call POST /agent/ask with the question as a query parameter
             response = requests.post(f"{API_URL}/agent/ask", params={"question": Question}, timeout=60)
-            if response.status_code !=200:
-                st.write(f"ERROR HAS OCCURED ON API END - HERE IS STATUS CODE: {response.status_code}  ")
-            data =  response.json()
-            st.write(f"Connection successfull heres info: {data}")
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                except Exception:
+                    st.error(f"Failed to parse JSON. Raw response from server: {response.text}")
+                    data = None
+
+                if data:
+                    st.markdown("### Agent Response")
+                    st.write(data.get("answer", "No answer provided."))
+                    
+                    if not data.get("completed", True):
+                        st.warning("Note: The agent reached its iteration limit before fully completing.")
+                    
+                    st.divider()
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Tool Calls", data.get("tool_calls_made", 0))
+                    col2.metric("Input Tokens", data.get("input_tokens", 0))
+                    col3.metric("Output Tokens", data.get("output_tokens", 0))
+            else:
+                st.error(f"ERROR OCCURRED ON API END - STATUS CODE: {response.status_code}")
+                st.write(response.text) # This will show you the actual FastAPI error message if it crashed
+                
         except requests.exceptions.Timeout:
-            st.error("The request timed out. The agent took too long to respond.")
+            st.error("The request timed out. API took too long to respond.")
         except requests.exceptions.ConnectionError:
             st.error("Could not connect to the API server. Make sure Uvicorn is running at http://127.0.0.1:8000.")
         except Exception as e:
-            # Prevent silent crashing
             st.error(f"An unexpected error occurred: {str(e)}")
 
+     #       data =  response.json()
+     #       st.write(f"Connection successfull heres info: {data}")
+     #   except requests.exceptions.Timeout:
+     #       st.error("The request timed out. The agent took too long to respond.")
+     #   except requests.exceptions.ConnectionError:
+     #       st.error("Could not connect to the API server. Make sure Uvicorn is running at http://127.0.0.1:8000.")
+     #   except Exception as e:
+     #       # Prevent silent crashing
+     #       st.error(f"An unexpected error occurred: {str(e)}")
 
 
-
+       
 
 
 #Feature 3: STREAM SUMMARY FUND FACT SHEET 
@@ -136,7 +162,7 @@ with tab4:
 
 
 with tab1: 
-    st.subheader("Portfolio Manager Portal- View All,Add and Delete by id ")
+    st.subheader("Portfolio Manager Portal- View All,compare and add client portfolios ")
 
     if st.button("SEE YOUR CLIENT PORTFOLIOS"):
         try:
@@ -165,8 +191,6 @@ with tab1:
             st.error(f"An unexpected error occurred: {str(e)}")
 
 
-
-    #
 
 
 
@@ -231,3 +255,6 @@ with tab1:
    #             
    #     except Exception as e:
    #         st.error(f"An unexpected error occurred: {str(e)}")
+
+
+
