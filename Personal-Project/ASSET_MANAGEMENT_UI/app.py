@@ -7,7 +7,7 @@ import requests
 import uuid   #This is unique identifier to stop duplicate form submissisions 
 
 
-st.set_page_config(page_title="ASSET MANAGE WEBAPP   ", page_icon=":)", layout="centered")
+st.set_page_config(page_title="ASSET MANAGE WEBAPP ", page_icon=":)", layout="centered")
 
 st.title("ASSET MANAGEMENT WEBAPP ")
 
@@ -99,7 +99,7 @@ with tab3:
 #reverse engnieered from firm intel UI
 
 with tab4: 
-    fund_id = st.text_area("FEATURE 3 - STREAM LLM SUMMARY- WRITE FUND IDNUMBER TO SUMMMARISE FACTSHEET ")
+    fund_id = st.text_area("FEATURE 3 - STREAM LLM SUMMARY- Write fund id number to summarise fund factsheet ")
 
     if st.button("Click me to stream an LLM summary of Fund Factsheets"):
 
@@ -138,7 +138,7 @@ with tab4:
 with tab1: 
     st.subheader("Portfolio Manager Portal- View All,Add and Delete by id ")
 
-    if st.button("SEE CLIENT PORTFOLIOS"):
+    if st.button("SEE YOUR CLIENT PORTFOLIOS"):
         try:
             # GET requests don't need a json payload for this
             response = requests.get(f"{API_URL}/portfolios/", timeout=60)
@@ -166,7 +166,14 @@ with tab1:
 
 
 
-    st.markdown("###  Add New Client Portfolio")
+    #
+
+
+
+
+
+
+    st.markdown("#####  Add New Client Portfolio")
     
     with st.form("create_portfolio_form", clear_on_submit=True):
         title = st.text_input("Portfolio Title", placeholder="e.g., Client Portfolio: Jane Turncoat")
@@ -198,6 +205,9 @@ with tab1:
                 except Exception as e:
                     st.error(f"An unexpected error occurred: {str(e)}")
 
+
+
+    #NOT NEEDED DUE TO REGULATORY/COMPLIANCE - A PORTFOLIO MANAGER CANNOT JUST DELETE PORTFOLIOS 
 
     # delete client portfolio by client id 
         

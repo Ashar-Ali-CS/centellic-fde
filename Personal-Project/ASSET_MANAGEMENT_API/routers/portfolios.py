@@ -90,15 +90,15 @@ def add_client_portfolio(new:NewPortfolio, idempotency_key:str | None = Header(d
         new_doc_id = f"doc-{counter:03d}"
 
 
-    # Generate new doc ID cleanly
-    #new_doc_id = f"doc-{len(DOCUMENTS) + 1:03d}"
+
+
     #  creates client_id for new portfolio
     #  by finding the current highest client_id
-    #existing_client_ids = [
-    #    doc["client_id"] for doc in DOCUMENTS 
-    #    if doc.get("client_id") is not None
-    #]
-    #next_client_id = max(existing_client_ids, default=0) + 1
+    existing_client_ids = [
+        doc["client_id"] for doc in DOCUMENTS 
+        if doc.get("client_id") is not None
+    ]
+    next_client_id = max(existing_client_ids, default=0) + 1
 
 
     client_portfolio = {
@@ -133,23 +133,31 @@ def edit_portfolio(new:NewPortfolio,client_portfolio: dict = Depends(get_client_
 
 
 
+#Temporary function to delete a rouge client_portfolio with "N/A"
+@router.delete("/remove", status_code=204)
+def delete_rogue():
+    """REMOVES CLIENT PORTFOLIO WITH 'N/A' """  
+    # Loop over a copy of the list so removing items doesn't break the loop
+    for document in list(DOCUMENTS):
+        if document.get("client_id") == "N/A":
+            DOCUMENTS.remove(document)
+            
+    # Rebuild the index once after cleaning everything out
+    knowledge.build_index()
+
+
+
+
+
+
 
 # ENDPOINT 4 - DELETE 
 @router.delete("/{client_id}", status_code=204)
-def delete_portfolio(client_portfolio: dict = Depends(get_client_or_404)):
+def delete_portfolio(client_portfolio: dict = Depends(get_client_or_404 )):
     """REMOVES CLIENT PORTFOLIO BY CLIENT ID"""
     DOCUMENTS.remove(client_portfolio)
     knowledge.build_index()
-    return
-
-
-
-
-
-
-
-
-
+    return 
 
 
 

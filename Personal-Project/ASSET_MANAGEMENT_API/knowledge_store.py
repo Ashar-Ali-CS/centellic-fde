@@ -19,7 +19,7 @@ EMBED_MODEL = "voyage-3-lite"
 voyage = voyageai.Client(
     api_key=os.environ["VOYAGE_API_KEY"],
     max_retries=3,
-    timeout = 3
+    timeout = 30
 )
 
 
@@ -42,8 +42,22 @@ def count() -> int:
 
 def build_index() -> int:
     """ Embed every document and hand the vectors to Chroma db """
+
+   # 1. Wipe the old collection completely so ghost records don't linger
+    try:
+        chroma.delete_collection(name="firm_documents")
+    except Exception:
+        pass
+    
+    # 2. Recreate it fresh with your cosine configuration
+    global collection
+    collection = chroma.get_or_create_collection(
+        name="firm_documents",
+        configuration={"hnsw": {"space": "cosine"}},
+    )
+
     texts = [doc["body"] for doc in DOCUMENTS]
-    vectors, tokens = embed_texts(texts,input_type="document")
+    vectors, tokens = embed_texts(texts, input_type="document")
 
     metadatas = [
         {
@@ -55,18 +69,14 @@ def build_index() -> int:
         for doc in DOCUMENTS
     ]
 
-
-    #if it already exists,upsert overwrites it(add would throw error) or if it doesnt it will create.
     collection.upsert(
-        ids =[doc["id"] for doc in DOCUMENTS],
+        ids=[doc["id"] for doc in DOCUMENTS],
         embeddings=vectors, 
         documents=texts,
         metadatas=metadatas,
     )
 
-  
-    return tokens 
-
+    return tokens
 
 #search function
 def search(question: str, top_k:int=3) -> list[dict]:
