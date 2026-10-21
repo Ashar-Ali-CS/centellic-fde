@@ -254,10 +254,8 @@ with tab1:
 
 
 
-
 with tab2: 
-
-    user_query = st.text_area("FEATURE 0 -Stream a Grounded Answer")
+    user_query = st.text_area("FEATURE 0 -Stream a Grounded Answer (token count is in terminal where server running)")
 
     if st.button("Click me to ask LLM question"):
         if user_query:
