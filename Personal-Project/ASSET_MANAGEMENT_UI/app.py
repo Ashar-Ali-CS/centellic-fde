@@ -14,7 +14,7 @@ st.title("ASSET MANAGEMENT WEBAPP ")
 
 
 #This makes it horzizontally allignee
-tab1, tab2,tab3,tab4= st.tabs([ "MANAGER PORTAL", "1 - SEARCH DOCS", "2 - ASK AGENT" , "3 -  FUNDS SUMMARY "] )
+tab1, tab2,tab3,tab4,tab5= st.tabs([ "MANAGER PORTAL", "0 - GROUNDED ASK ","1 - SEARCH DOCS", "2 - ASK AGENT" , "3 -  FUNDS SUMMARY "] )
 
 API_URL  = "http://127.0.0.1:8000"
 
@@ -25,7 +25,7 @@ API_URL  = "http://127.0.0.1:8000"
 #Handle the case where the index has not been built yet, this returns a specific status code, not a generic failure
 #Handle a normal failure differently from the “index not built” case
 
-with tab2: 
+with tab3: 
     Query = st.text_area("FEATURE 1-  SEMANTIC SEARCH (knowledge/search )  ")
     Top_K = 3
 
@@ -50,7 +50,7 @@ with tab2:
 
 
 
-#Feature 2: Ask
+#Feature 2: Ask Agent 
 #A text box where someone can type a question in plain English, and a button to send it.
 
 #When clicked, it must call POST /agent/ask with the question, and:
@@ -60,7 +60,7 @@ with tab2:
 #Show the number of tool calls made and the token counts somewhere on screen
 #Show a clear error message if the request fails, do not let it crash silently
 
-with tab3: 
+with tab4: 
     Question = st.text_area("FEATURE 2 - ASK AGENT HERE (it will need client_id if using predict portfolio returns tool)")
 
     if st.button("Click me to ask agent something"):
@@ -120,7 +120,7 @@ with tab3:
 
 #reverse engnieered from firm intel UI
 
-with tab4: 
+with tab5: 
     fund_id = st.text_area("FEATURE 3 - STREAM LLM SUMMARY- Write fund id number to summarise fund factsheet ")
 
     if st.button("Click me to stream an LLM summary of Fund Factsheets"):
@@ -251,6 +251,37 @@ with tab1:
    #             
    #     except Exception as e:
    #         st.error(f"An unexpected error occurred: {str(e)}")
+
+
+
+
+with tab2: 
+
+    user_query = st.text_area("FEATURE 0 -Stream a Grounded Answer")
+
+    if st.button("Click me to ask LLM question"):
+        if user_query:
+            payload = {"question": user_query, "top_k": 3}
+            
+            response = requests.post(
+                f"{API_URL}/knowledge/ask", 
+                json=payload, 
+                stream=True
+            )
+            
+            if response.status_code == 200:
+                # Check if response is streaming text or JSON refusal
+                content_type = response.headers.get("content-type", "")
+                if "application/json" in content_type:
+                    data = response.json()
+                    if data.get("refused"):
+                        st.warning(f"Refused: {data.get('reason')}")
+                else:
+                    st.write_stream(response.iter_content(chunk_size=1024, decode_unicode=True))
+            elif response.status_code == 429:
+                st.error("Rate limit reached. Please wait a few seconds and try again.")
+            else:
+                st.error(f"Error {response.status_code}: {response.text}")
 
 
 
