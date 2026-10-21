@@ -8,7 +8,7 @@ from pydantic import BaseModel ,Field
 
 import knowledge_store as knowledge
 
-from knowledge_store import collection
+ # import your helper function
 
 router = APIRouter(prefix="/portfolios",tags=["portfolios"])
 
@@ -45,12 +45,24 @@ _seen_keys: dict[str, dict] = {}
 #        for document in DOCUMENTS 
 #        if document.get("type") == "client_portfolio"
 #    ]
+# 
+
+
+import chromadb
+# Local client helper to prevent any stale ID crashes
+def get_safe_collection():
+    chroma = chromadb.PersistentClient(path="./chroma_store")
+    return chroma.get_or_create_collection(
+        name="firm_documents",
+        configuration={"hnsw": {"space": "cosine"}},
+    )
+
 @router.get("")
 def get_all_portfolios():
-    """Fetch all client portfolios directly from local ChromaDB storage without calling the API."""
+    """Fetch all client portfolios safely from local ChromaDB storage."""
     try:
-        # collection.get only reads local disk, so it will never hit Voyage AI rate limits
-        all_data = collection.get(include=["documents", "metadatas"])
+        col = get_safe_collection()
+        all_data = col.get(include=["documents", "metadatas"])
         
         portfolios = []
         for body, metadata in zip(all_data["documents"], all_data["metadatas"]):
@@ -63,7 +75,6 @@ def get_all_portfolios():
         return portfolios
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch portfolios: {str(e)}")
-
 
 
 #Endpoint 1 - Get specific client_portfolio based on client id
@@ -164,8 +175,6 @@ def delete_rogue():
             
     # Rebuild the index once after cleaning everything out
     knowledge.build_index()
-
-
 
 
 
