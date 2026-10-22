@@ -72,6 +72,7 @@ def test_provider_timeout_becomes_504(monkeypatch):
 
 
 
+
 # ----------- TESTS FOR VECTOR SEARCH EMBEDDINGS (no real embedding calls) --------------
 
 
@@ -84,6 +85,7 @@ def test_provider_timeout_becomes_504(monkeypatch):
 
 def test_short_question_is_rejected_before_any_work():
     assert client.post("/knowledge/ask", json={"question": "hi"}).status_code == 422
+
 
 
 
@@ -140,3 +142,49 @@ def test_agent_stops_at_max_iterations_instead_of_looping_forever(monkeypatch):
 
 
 
+def test_agent_completes_successfully_within_limit(monkeypatch):
+    """Verifies standard completion when the agent provides a final answer."""
+
+    call_count = 0
+
+    def fake_turn_create(**kwargs):
+        nonlocal call_count
+        call_count += 1
+
+        # Turn 1: Call a tool
+        if call_count == 1:
+            return FakeResponse(
+                [FakeToolUseBlock({"query": "Bruce Bat portfolio"})],
+                "tool_use",
+                FakeUsage(50, 10),
+            )
+        # Turn 2: Provide final textual answer
+        else:
+            return FakeResponse(
+                [FakeText = FakeTextBlock("Bruce Bat's mandate is JUSTICE.")],
+                "end_turn",
+                FakeUsage(60, 20),
+            )
+
+    monkeypatch.setattr(agent.client.messages, "create", fake_turn_create)
+    monkeypatch.setattr(
+        agent.knowledge,
+        "search",
+        lambda q, top_k=3: [
+            {
+                "id": "doc-006",
+                "title": "Bruce Bat",
+                "text": "Mandate: JUSTICE",
+                "score": 0.9,
+            }
+        ],
+    )
+
+    response = client.post("/agent/ask", params={"question": "What is Bruce Bat's mandate?"})
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["completed"] is True
+    assert body["stop_reason"] == "end_turn"
+    assert body["tool_calls_made"] == 1
+    assert "JUSTICE" in body["answer"]
