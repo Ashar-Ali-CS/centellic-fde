@@ -13,6 +13,7 @@ from anthropic import APIStatusError, APITimeoutError,RateLimitError
 from pydantic import BaseModel, Field
 
 import time
+import grounding 
 
 MODEL = "claude-haiku-4-5-20251001"
 
@@ -145,11 +146,13 @@ def portfolio_analysis(client_portfolio: dict) -> dict:
 
 
 
+#WIRED UP WITH grounding.py here 
+
+
 GROUNDED_SYSTEM_PROMPT = (
     " You are a helpfull asset portfolio manager assistent. Answer using ONLY the context provided"
     "Cite the document id in square brackets after each claim , like [doc-001]."
-    " If context does not contain answer , say exactly: "
-    "'The provided documents do not answer the question.'"
+    f" If context does not contain answer , say exactly: {grounding.REFUSAL_SENTANCE}"
     "Never use knowledge from outside the context. Use British English. No em dash charecters."
 )
 
@@ -157,12 +160,12 @@ GROUNDED_SYSTEM_PROMPT = (
 
 # used in router knowledge.py 
 
-def stream_grounded_answer( question:str , context: str):
+def stream_grounded_answer( question:str , context: str, system: str = GROUNDED_SYSTEM_PROMPT):
     """Answers strictly from retrived context....the G in RAG , streaming it in chunks"""
     with client.messages.stream(
         model=MODEL,
         max_tokens=500,
-        system=GROUNDED_SYSTEM_PROMPT,
+        system=system,
         messages=[{
             "role":"user",
             "content":f"Content \n\n{context}\n\n Question: {question}",

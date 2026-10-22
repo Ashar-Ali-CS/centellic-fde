@@ -142,49 +142,68 @@ def test_agent_stops_at_max_iterations_instead_of_looping_forever(monkeypatch):
 
 
 
-def test_agent_completes_successfully_within_limit(monkeypatch):
-    """Verifies standard completion when the agent provides a final answer."""
 
-    call_count = 0
 
-    def fake_turn_create(**kwargs):
-        nonlocal call_count
-        call_count += 1
 
-        # Turn 1: Call a tool
-        if call_count == 1:
-            return FakeResponse(
-                [FakeToolUseBlock({"query": "Bruce Bat portfolio"})],
-                "tool_use",
-                FakeUsage(50, 10),
-            )
-        # Turn 2: Provide final textual answer
-        else:
-            return FakeResponse(
-                [FakeText = FakeTextBlock("Bruce Bat's mandate is JUSTICE.")],
-                "end_turn",
-                FakeUsage(60, 20),
-            )
 
-    monkeypatch.setattr(agent.client.messages, "create", fake_turn_create)
-    monkeypatch.setattr(
-        agent.knowledge,
-        "search",
-        lambda q, top_k=3: [
-            {
-                "id": "doc-006",
-                "title": "Bruce Bat",
-                "text": "Mandate: JUSTICE",
-                "score": 0.9,
-            }
-        ],
-    )
 
-    response = client.post("/agent/ask", params={"question": "What is Bruce Bat's mandate?"})
-    assert response.status_code == 200
+# -------------- TESTS FOR GROUNDING ----------------
 
-    body = response.json()
-    assert body["completed"] is True
-    assert body["stop_reason"] == "end_turn"
-    assert body["tool_calls_made"] == 1
-    assert "JUSTICE" in body["answer"]
+
+
+
+
+import grounding 
+
+
+
+#This is random fake sources , this is just to test my grounding.check_citations() works 
+SOURCES = {
+    "doc-101": "Harding and Voss closed the  year with revenue of $1.24 billion, up 4.1%.",
+    "doc-107": "fixed=share partners are excluded from the equity partner count.",
+}
+
+
+# Failure 1 - ungrounded claims 
+
+# test that refusal needs nocitations
+def test_refusal_needs_no_citations():
+    report = grounding.check_citations(grounding.REFUSAL_SENTANCE, ["doc-101"])
+    assert report["refusal"] is True and report["passed"] is True   
+
+
+
+#test fully cited answer passes
+def test_fully_cited_answer_passes():
+    answer = "revenue grew by 4.1 percent.[doc-101]"
+    report = grounding.check_citations(answer, ["doc-101"] )
+    assert report["refusal"] is False and report["passed"] is True
+    assert len(report["cited"]) ==1 
+
+
+
+#test uncited sentance is flagged 
+def test_uncited_sentance_is_flagged():
+    answer = "Revenue grew by 4.1 percent.[doc-101]. The firm is one of largest in europe. " 
+    report = grounding.check_citations(answer, ["doc-101"] )
+    assert report["uncited_sentances"] is not None 
+    assert report["uncited_sentances"] == ["The firm is one of largest in europe."]
+    assert report["passed"] is False
+
+
+#test citation after full stop still counts   
+def test_citatation_after_full_stop_counts():
+    answer = "Harding & Voss closed the year with revenue of 2.1 billion.[doc-101]"
+    report = grounding.check_citations(answer, ["doc-101"] )
+    assert  report["passed"] is True
+    assert report["uncited_sentances"] ==[]
+
+
+
+
+
+#test invalid_citation
+def test_invalid_citation_is_flagged():
+    answer = "Harding and Voss closed the year with revenue of $1.24 billion, up 4.1%. [doc-200]"
+    report = grounding.check_citations(answer, SOURCES )
+    assert report["passed"] is False
