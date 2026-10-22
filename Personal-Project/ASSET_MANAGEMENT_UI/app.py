@@ -61,7 +61,7 @@ with tab3:
 #Show a clear error message if the request fails, do not let it crash silently
 
 with tab4: 
-    Question = st.text_area("FEATURE 2 - ASK AGENT HERE (it will need client_id if using predict portfolio returns tool)")
+    Question = st.text_area("FEATURE 2 - ASK AGENT HERE (it will need client_id and name to analyse client portfolio tool)")
 
     if st.button("Click me to ask agent something"):
         try:
@@ -158,7 +158,7 @@ with tab5:
 
 
 with tab1: 
-    st.subheader("Portfolio Manager Portal- View All,compare and add client portfolios ")
+    st.subheader("Portfolio Manager Portal- View All,Compare and Add client portfolios ")
 
     if st.button("SEE YOUR CLIENT PORTFOLIOS"):
         try:

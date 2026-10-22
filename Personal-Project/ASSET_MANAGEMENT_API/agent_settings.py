@@ -46,13 +46,11 @@ SEARCH_TOOL = {
 
 
 
-
-
 # TOOL 2 - The Agent retrives and predicts portfolio returns  using client id. 
 
 TOOL = {
-    "name": "predict_portfolio_returns",
-    "description": " Search thier client_name first and display then - Calculate the total annual management fees and projected returns for a client's specific portfolio allocation.",
+    "name": "analyse_portfolio",
+    "description":"With client id , find client Name  and make overall Assesesmnet, list strenghts and list risks ",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -61,7 +59,6 @@ TOOL = {
         "required": ["client_id"],
     },
 }
-
 
 
 
