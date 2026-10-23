@@ -12,8 +12,6 @@ If either changes, the collection is rebuilt from scratch.
 
 """
 
-
-
 #things to note in switch to chroma (had to insatall chromadb first)
 
 #embed_texts() is imported not rewritten ....embeedding provider hasnt changed only the storage has 
@@ -21,30 +19,20 @@ If either changes, the collection is rebuilt from scratch.
 # chroma returns distance , we return similairty 
 # in chroma lower is better
 # higher was better for ours ...(1-distance) converts    
-
 #upsert instead of add -> add falls on an id that already exists , upsert overwrites. 
-
-
-#refacotring steps tommarow ,rapid UI prototyping (spec driven AI ,interacting with chroma db),
-#context engineering theory
-
-
-
-
-
 
 
 import hashlib
 import chromadb
 
 import chunking 
-import knowledge
-from corpus import CORPUS_DOCUMENTS
+import knowledge_store as knowledge
+
 from documents import DOCUMENTS
 import time
 from voyageai.error import RateLimitError
 
-ALL_DOCUMENTS = DOCUMENTS + CORPUS_DOCUMENTS
+ALL_DOCUMENTS = DOCUMENTS 
 BATCH_SIZE = 128 # Voyage's own guidence: batch documents to stay well with rate limtis 
 
 
@@ -161,7 +149,6 @@ Run for every query -> Question vector -> search_with_vectors(functinolity) -> C
 
 Adding search with vectors function to do eval harness
 
-
 """
 
 
@@ -213,10 +200,6 @@ def search_with_vectors(strategy: str, query_vectors: list[list[float]], k: int)
 
 
 
-
-
-
-
 """ 
 A chunk that only keyword search found has no cosine score...our relevence gate needs one 
 """
@@ -243,9 +226,6 @@ def cosine_for(strategy: str, query_vector: list[float], chunk_ids:list[str]) ->
     # now every hit has a cosine...so the gate works the same on all of them 
         # score >= 0.45 orrr exact match  
         
-# question metnioed 3307 
-# chunk mentions 3307 
-# cosnie score expect high but not always case. 
 
 
 
