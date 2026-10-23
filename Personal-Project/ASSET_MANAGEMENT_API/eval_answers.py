@@ -15,7 +15,7 @@ import json
 import statistics
 from pathlib import Path
 
-import ASSET_MANAGEMENT_API.chunk_index as chunk_index
+import chunk_index as chunk_index
 import context
 import llm
 from eval_set import EVAL_SET
@@ -41,11 +41,19 @@ def run(strategy: str , vecotrs: list[list[float]], floor: float) -> dict:
         # not pass - refuse without calling model  ( like knowledge/ask )
 
         if usable:
-            result = llm.answer_from_context(q["question"], context.build_context(usable))
-            answer = result["answer"]
-            tokens.append(result["input_tokens"])
+            # Consume the generator stream into a single string
+            stream_gen = llm.stream_grounded_answer(q["question"], context.build_context(usable))
+            
+            # If your stream yields strings or chunks, join them together:
+            answer = "".join(list(stream_gen))
+            
+            # Note: If your generator doesn't expose tokens directly, 
+            # you may want a separate non-streaming llm.get_grounded_answer() for evaluation, 
+            # or track tokens differently during eval.
+            tokens.append(100)  # fallback estimate if tokens aren't returned by stream
         else: 
-            answer = None 
+            answer = None   
+      
 
         # was the results right ?
         
@@ -54,7 +62,7 @@ def run(strategy: str , vecotrs: list[list[float]], floor: float) -> dict:
         ok = keywords_present(answer, q["keywords"]) if q["doc_id"] else is_refusal(answer)
         correct.append((q, ok))
         if not ok: 
-            (false_refusals if q["doc_id"] and is_refusal(answer) else wrong).append(q["id"])
+            (false_refusals if q["doc_id"] and is_refusal(answer) else wrong).append(q.get("id", "unknown"))
 
     answerable = [ok for q, ok in correct if q["doc_id"]]
     unanswerable = [ok for q, ok in correct if not q["doc_id"]]

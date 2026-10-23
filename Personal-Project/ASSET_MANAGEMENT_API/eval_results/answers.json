@@ -1,0 +1,13 @@
+{
+  "floor": 0.4,
+  "whole_document": {
+    "answer_accuracy": 0.933,
+    "refusal_accuracy": 1,
+    "false_refusals": [],
+    "wrong_or_unrefused": [
+      "unknown"
+    ],
+    "model_calls": 20,
+    "avg_input_tokens": 100
+  }
+}

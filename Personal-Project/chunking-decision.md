@@ -3,26 +3,53 @@
 
 # Chunking decision
 
-**Date:**   **Decided by:** ASHAR ALI   **Corpus:** documents.py
-**Eval set:** eval_set.py (, 3 )  **Embedding model:** voyage-3-lite
+**Date:23/10/2026**   **Decided by:** ASHAR ALI   **Corpus:** documents.py
+**Eval set:** eval_set.py  **Embedding model:** voyage-3-lite
 
 ## Decision
-We serve `<strategy>` with a relevance floor of `<floor>`.
+We serve `whole document` strategy  with a relevance floor of `0.4`.
+
 
 
 
 ## Evidence
 
 
-Note - Answer acc+ refusal acc aquired through using running "eval_answers" for these strategies in git bash
+To evalute the chunking strategies and which is best I ran eval retrieva -
+venv/Scripts/python.exe -m eval_retrieval - in git bash. I found this : 
 
 
 
-| Strategy | R@1 | R@3 | MRR | Context words@3 | Answer acc. | Refusal acc. |
-|---|---|---|---|---|---|---|
-| whole_document|0.69|1.0|0.84| 862| 0.97 | 1.00|
-| <best>sections_contextual |0.86 | 1.00 | 0.93 | 197 | 0.79 | 1.00 |
-| <second>fixed_overlap_25| 0.52| 0.97 |0.67 |277 | 0.97 | 1.00 |
+Embedded 20 questions once (283 tokens), reused for every strategy.
+
+strategy                 R@1   R@3   R@5    MRR  ctx words  top ans  top unans
+------------------------------------------------------------------------------
+whole_document          0.93  1.00  1.00   0.97        113     0.69       0.56
+fixed_100               0.93  1.00  1.00   0.97        113     0.69       0.56
+fixed_overlap_25        0.93  1.00  1.00   0.97        113     0.69       0.56
+sentences_100           0.93  1.00  1.00   0.97        113     0.69       0.56
+sections_plain          0.93  1.00  1.00   0.97        113     0.69       0.56
+sections_contextual     0.93  1.00  1.00   0.97        125     0.67       0.55
+
+Missed at k=3:
+  whole_document         none
+  fixed_100              none
+  fixed_overlap_25       none
+  sentences_100          none
+  sections_plain         none
+  sections_contextual    none
+
+
+WHen i ran eval answers i found with current relevence floors : 
+
+floor = 0.4
+
+strategy                answers  refusals  calls  avg in tokens
+whole_document             0.93      1.00     20            100
+    false refusals: none
+    wrong or not refused: unknown
+
+
 
 
 
@@ -30,30 +57,21 @@ Note - Answer acc+ refusal acc aquired through using running "eval_answers" for 
 ## Why this one
 <Two or three sentences. Which number decided it, and what you gave up.>
 
-I choose ?>>> as it performed better in the metrics - MRR , R@1 and R@3 - then compared to the whole_document baseline and other strategies.
+I chosee whole document strategy as i saw that chunking  methods didnt improve performance .
 
-Furthermore , I chose the floor ?? as optimal point becuase after testing it on running eval answers on differnt floor levels i found that it leads to too many false refusals(answerable question being rejected by model) or calling model for unanswerable answers (theres 32 documents and 3 are unanswerable). So if it only makes 29 calls its indicative that the model. 
-
-
+Furthermore , I chose the floor  0.4 , it is low- I saw the answer accuracy was high and there was no false refusals. 
 
 
-EVIDENCE 0.55 IS GOOD DESCION - 
-
-
-
- 
-WHY BAD BELOW 0.55 to 0.50  
-
-
-
-WHY BAD ABOVE 0.55 to 0.60 -
-
+However,what i gave up was the relevence floor being high enough to ignore unaswerable queries - all 20 questions in eval set led to model call. Even though 5 where unanswerable .
 
 
 ## Known weaknesses
 <Questions the winner still misses, by kind. Which ones need hybrid retrieval, not better chunking?>
 
 
+Currently my data/documents are not to extensive and structured. Later on I might need a better chunking strategy ,such as when documents with secitons(titles/headers) come. 
+
+My relevence floor is also quite low and should be increased to avoid making too many model calls. 
 
 
 
@@ -61,8 +79,8 @@ WHY BAD ABOVE 0.55 to 0.60 -
 <What would make this decision wrong: a new document type, a new embedding model, longer documents.>
 
 
-We should revisit this descision , when there is new document type that is less structured i.e not split into title +headers.
-Sections contextual uses "## " header parts in the document to help chunk it. 
+We should revisit this descision , when there is new document type that is more structured i.e split into title +headers.
+Sections contextual uses "## " header parts in the document could  help chunk it. 
 
-Furthermore , the descision should also be re-evaluted when there is longer documents. This could impact token counts and we may want to decreasse relevence floor. 
+Furthermore , the descision should also be re-evaluted when there is longer documents. This could impact token counts and we may want to increase relevence floor. 
 

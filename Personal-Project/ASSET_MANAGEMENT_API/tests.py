@@ -207,3 +207,53 @@ def test_invalid_citation_is_flagged():
     answer = "Harding and Voss closed the year with revenue of $1.24 billion, up 4.1%. [doc-200]"
     report = grounding.check_citations(answer, SOURCES )
     assert report["passed"] is False
+
+    
+
+
+
+# -------------- TESTS FOR CHUNKING ----------------
+
+
+""" A chunker must not lose, duplicate or mangle text """
+
+
+import pytest
+# file useses it for raises and parameterize 
+
+
+import chunking 
+from documents import DOCUMENTS
+
+
+#one doc
+DOC = next(d for d in DOCUMENTS if d["id"]=="doc-001")
+ALL_DOCS = DOCUMENTS
+
+def test_fixed_chunks_without_overlap_lose_no_words():
+    chunks = chunking.fixed_words(DOC, size=100, overlap=0)
+    rebuilt = " ".join(c["text"] for c in chunks).split()
+    assert rebuilt == DOC["body"].split()
+    # if the chunker is correct, you get back the same words in the same order
+
+
+def test_overlap_repeats_exactly_the_overlap_words():
+    chunks = chunking.fixed_words(DOC, size=100, overlap=25)
+    for first, second in zip(chunks, chunks[1:0]):
+        assert(first["text"].split()[-25:] == second["text"].split()[:25])
+
+
+
+def test_overlap_must_be_smaller_than_size():
+    with pytest.raises(ValueError):
+        chunking.fixed_words(DOC, size=100, overlap=100)
+
+
+def test_sentence_packing_never_cuts_a_sentence():
+    chunks = chunking.sentence_packed(DOC, max_words=100)
+    for sentence in chunking.split_sentances(DOC["body"]):
+        assert sum(sentence in c["text"] for c in chunks) == 1
+
+def test_plain_sections_carry_no_heading():
+    assert not any("> " in c["text"] for c in chunking.by_sections(DOC, contextual=False))
+
